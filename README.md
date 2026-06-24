@@ -1,4 +1,4 @@
-# QTranslate for Linux
+# P-Translate
 
 A fast, lightweight, and modern translation popup application for Linux, inspired by QTranslate on Windows. It grabs the currently highlighted text, translates it using the free Google Translate API, and displays the result in a beautiful, borderless dark-themed popup right at your cursor position. The popup auto-closes when it loses focus (when you click elsewhere) or when you press the `Escape` key.
 
@@ -12,58 +12,47 @@ A fast, lightweight, and modern translation popup application for Linux, inspire
 
 ---
 
-## Prerequisites
-
-First, ensure you have the required clipboard utilities installed for your display server:
-
-### For Ubuntu/Debian/Mint:
-```bash
-# For Wayland (default on most modern distributions like Ubuntu 22.04+)
-sudo apt install wl-clipboard
-
-# For X11 (if you are running on Xorg)
-sudo apt install xclip xsel
-```
-
-### For Fedora/RHEL:
-```bash
-sudo dnf install wl-clipboard xclip xsel
-```
-
-### For Arch Linux:
-```bash
-sudo pacman -S wl-clipboard xclip xsel
-```
-
----
-
 ## Installation
 
-1. **Clone or copy the application files** to a directory of your choice, e.g., `/home/username/qtranslate-linux`.
-2. **Install the Python dependencies**:
+### Method 1: Installing via Debian Package (Recommended for Ubuntu/Debian/Mint)
+This is the easiest installation method as it automatically handles all dependencies (such as Python 3, PyQt6, xdotool, and xclip).
+
+1. Download the latest `p-translate.deb` package from the [Releases](https://github.com/buiphuc/p-translate/releases) page.
+2. Install the package using `dpkg`:
    ```bash
-   pip install -r requirements.txt
+   sudo dpkg -i p-translate.deb
+   # If there are any missing dependencies, resolve them with:
+   sudo apt install -f
    ```
-   *Note: If you run into a PEP 668 externally-managed-environment error, you can install PyQt6 via your package manager (`sudo apt install python3-pyqt6`) or create a Python virtual environment.*
+
+### Method 2: Manual Installation (Other Distributions)
+1. **Install Prerequisites**: Ensure you have the required clipboard and automation utilities:
+   - **Fedora/RHEL**: `sudo dnf install wl-clipboard xclip xsel xdotool python3-pyqt6`
+   - **Arch Linux**: `sudo pacman -S wl-clipboard xclip xsel xdotool python3-pyqt6`
+2. **Clone or copy the application files** to a directory of your choice, e.g., `/home/username/p-translate`.
+3. Make `run.sh` executable:
+   ```bash
+   chmod +x /home/username/p-translate/run.sh
+   ```
 
 ---
 
-## How to Set Up the `Ctrl + Q` Shortcut
+## How to Set Up the Keyboard Shortcut
 
-To translate text instantly like QTranslate on Windows, configure a custom keyboard shortcut in your Linux desktop environment (GNOME, KDE, XFCE, etc.).
+To translate text instantly like QTranslate on Windows, configure a custom keyboard shortcut in your Linux desktop environment (GNOME, Cinnamon, KDE, XFCE, etc.).
 
-### For GNOME (Ubuntu, Fedora, Debian default):
+### For Debian Package users:
 1. Open **Settings** -> **Keyboard** (or **Keyboard Shortcuts**).
-2. Scroll to the bottom and click on **View and Customise Shortcuts** -> **Custom Shortcuts** (or **Add Custom Shortcut**).
-3. Click the **+** (Add) button.
-4. Fill in the fields:
-   - **Name**: `QTranslate Linux`
-   - **Command**: `python3 /absolute/path/to/qtranslate-linux/main.py`
-   - **Shortcut**: Press `Ctrl + Q` (Note: If `Ctrl + Q` is bound to something else, GNOME will ask to reassign it).
-5. Click **Add**.
+2. Go to **Custom Shortcuts** -> click **Add Custom Shortcut** (or click the **+** button).
+3. Fill in the fields:
+   - **Name**: `P-Translate`
+   - **Command**: `p-translate`
+   - **Shortcut**: Press `Ctrl + Q` (or any shortcut of your choice).
+4. Click **Add**.
 
-*Tip: If you used a virtual environment, set the Command to use the python interpreter inside that virtual environment, for example:*
-`/home/username/qtranslate-linux/venv/bin/python /home/username/qtranslate-linux/main.py`
+### For Manual Installation users:
+Set the **Command** in the shortcut configuration to run the wrapper script:
+- `/bin/bash /home/username/p-translate/run.sh`
 
 ---
 
@@ -74,6 +63,6 @@ To translate text instantly like QTranslate on Windows, configure a custom keybo
 3. The translation popup will appear instantly near your cursor showing the translated text in Vietnamese.
 4. **Interact**:
    - Change languages via the dropdowns (source text will re-translate automatically).
-   - Press **Copy** or hit Enter to copy the translation.
+   - Press **Copy Translation** or hit Enter to copy the translation to your clipboard.
    - Edit the source text in the top box and click **Translate** (or press the hotkey again) to translate new text.
 5. **Close**: Simply click anywhere outside the popup window, click the `×` button, or press the `Escape` key.
