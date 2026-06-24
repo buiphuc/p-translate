@@ -1,9 +1,9 @@
 #!/bin/bash
-# Script to build Debian package (.deb) for QTranslate Linux
+# Script to build Debian package (.deb) for P-Translate
 
 set -e
 
-APP_NAME="qtranslate-linux"
+APP_NAME="p-translate"
 VERSION="1.0.0"
 BUILD_DIR="build_deb_tmp"
 
@@ -34,7 +34,7 @@ EOF
 # 4. Create executable wrapper in /usr/bin
 cat << 'EOF' > "$BUILD_DIR/usr/bin/$APP_NAME"
 #!/bin/bash
-exec /usr/share/qtranslate-linux/run.sh "$@"
+exec /usr/share/p-translate/run.sh "$@"
 EOF
 chmod 755 "$BUILD_DIR/usr/bin/$APP_NAME"
 
@@ -51,7 +51,7 @@ cat << EOF > "$BUILD_DIR/usr/share/applications/$APP_NAME.desktop"
 [Desktop Entry]
 Version=1.0
 Type=Application
-Name=QTranslate Linux
+Name=P-Translate
 Comment=Quick translation tool using hotkey
 Exec=$APP_NAME
 Icon=accessories-dictionary

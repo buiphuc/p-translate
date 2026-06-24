@@ -6,7 +6,7 @@ import ast
 import re
 
 # Path to the config file in user's config directory
-CONFIG_DIR = os.path.expanduser("~/.config/qtranslate-linux")
+CONFIG_DIR = os.path.expanduser("~/.config/p-translate")
 os.makedirs(CONFIG_DIR, exist_ok=True)
 CONFIG_PATH = os.path.join(CONFIG_DIR, "config.json")
 
@@ -113,13 +113,13 @@ def apply_shortcut(qt_shortcut: str) -> tuple[bool, str]:
                 except Exception:
                     bindings_list = []
             
-            # Find if our QTranslate binding is already registered, and find max index
+            # Find if our P-Translate binding is already registered, and find max index
             max_idx = -1
             our_existing_id = None
             for item in bindings_list:
                 item_path = f"{custom_schema}:{path_prefix}{item}/"
                 res_name = subprocess.run(["gsettings", "get", item_path, "name"], stdout=subprocess.PIPE, text=True)
-                if "QTranslate Linux" in res_name.stdout:
+                if "P-Translate" in res_name.stdout:
                     our_existing_id = item
                     break
                 match = re.search(r'custom(\d+)$', item)
@@ -141,7 +141,7 @@ def apply_shortcut(qt_shortcut: str) -> tuple[bool, str]:
                 
             # Set keybinding details
             target_path = f"{custom_schema}:{path_prefix}{binding_id}/"
-            subprocess.run(["gsettings", "set", target_path, "name", "QTranslate Linux"])
+            subprocess.run(["gsettings", "set", target_path, "name", "P-Translate"])
             subprocess.run(["gsettings", "set", target_path, "command", command_str])
             # Cinnamon binding must be formatted as a list of strings
             subprocess.run(["gsettings", "set", target_path, "binding", f"['{gsettings_key}']"])
@@ -174,7 +174,7 @@ def apply_shortcut(qt_shortcut: str) -> tuple[bool, str]:
             for item in bindings_list:
                 item_path = f"{custom_schema}:{item}"
                 res_name = subprocess.run(["gsettings", "get", item_path, "name"], stdout=subprocess.PIPE, text=True)
-                if "QTranslate Linux" in res_name.stdout:
+                if "P-Translate" in res_name.stdout:
                     our_existing_path = item
                     break
                 match = re.search(r'custom(\d+)/$', item)
@@ -196,7 +196,7 @@ def apply_shortcut(qt_shortcut: str) -> tuple[bool, str]:
                 
             # Set keybinding details
             target_path = f"{custom_schema}:{new_path}"
-            subprocess.run(["gsettings", "set", target_path, "name", "QTranslate Linux"])
+            subprocess.run(["gsettings", "set", target_path, "name", "P-Translate"])
             subprocess.run(["gsettings", "set", target_path, "command", command_str])
             # GNOME binding is a direct string
             subprocess.run(["gsettings", "set", target_path, "binding", gsettings_key])
@@ -211,7 +211,7 @@ def apply_autostart(enable: bool) -> tuple[bool, str]:
     to control automatic application launching on desktop login.
     """
     autostart_dir = os.path.expanduser("~/.config/autostart")
-    desktop_file_path = os.path.join(autostart_dir, "qtranslate-linux.desktop")
+    desktop_file_path = os.path.join(autostart_dir, "p-translate.desktop")
     
     if enable:
         try:
@@ -224,7 +224,7 @@ def apply_autostart(enable: bool) -> tuple[bool, str]:
             
             content = f"""[Desktop Entry]
 Type=Application
-Name=QTranslate Linux
+Name=P-Translate
 Comment=Quick translation tool using hotkey
 Exec=/bin/bash {run_sh_path}
 X-GNOME-Autostart-enabled=true
