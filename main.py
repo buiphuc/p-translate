@@ -4,7 +4,7 @@ import shutil
 import os
 from PyQt6.QtWidgets import QApplication
 from ui import TranslationPopup
-from settings_manager import load_config, apply_shortcut
+from settings_manager import load_config, apply_shortcut, check_and_update_shortcut_registration
 
 def get_linux_selection_text() -> str:
     """
@@ -169,6 +169,13 @@ def main():
         else:
             print(f"ERROR: {message}")
             sys.exit(1)
+
+    # Automatically check and register shortcut/autostart configuration if needed
+    try:
+        check_and_update_shortcut_registration()
+    except Exception as e:
+        # Silently log errors or print to stderr, avoiding app crash on startup
+        sys.stderr.write(f"Failed to check/update shortcut registration: {e}\n")
 
     # 2. Retrieve the highlighted text
     selected_text = get_linux_selection_text()

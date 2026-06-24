@@ -242,3 +242,148 @@ Terminal=false
             return True, "Autostart disabled successfully"
         except Exception as e:
             return False, f"Failed to disable autostart: {str(e)}"
+
+def check_and_update_shortcut_registration() -> tuple[bool, str]:
+    """
+    Checks if the current global shortcut and autostart registration
+    in GSettings/autostart folder match the current application path and settings.
+    If they do not match, or are not registered yet, they will be updated automatically.
+    """
+    # 1. Load current configuration
+    config = load_config()
+    shortcut = config.get("shortcut", "Ctrl+Q")
+    autostart = config.get("autostart", False)
+    
+    # 2. Define the expected command string
+    main_path = os.path.abspath(__file__)
+    project_dir = os.path.dirname(main_path)
+    expected_command = f"/bin/bash {project_dir}/run.sh"
+    
+    # 3. Detect Desktop Environment
+    try:
+        schemas_res = subprocess.run(
+            ["gsettings", "list-schemas"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            timeout=2
+        )
+        all_schemas = schemas_res.stdout
+    except Exception as e:
+        return False, f"Failed to list GSettings schemas: {str(e)}"
+        
+    is_cinnamon = "org.cinnamon.desktop.keybindings" in all_schemas
+    is_gnome = "org.gnome.settings-daemon.plugins.media-keys" in all_schemas
+    
+    shortcut_needs_update = True
+    gsettings_key = qt_to_gsettings_shortcut(shortcut)
+    
+    if is_cinnamon:
+        # Check Cinnamon keybindings
+        schema = "org.cinnamon.desktop.keybindings"
+        key = "custom-list"
+        path_prefix = "/org/cinnamon/desktop/keybindings/custom-keybindings/"
+        custom_schema = "org.cinnamon.desktop.keybindings.custom-keybinding"
+        
+        try:
+            res = subprocess.run(["gsettings", "get", schema, key], stdout=subprocess.PIPE, text=True, timeout=2)
+            list_str = res.stdout.strip()
+            if list_str and not list_str.startswith("@as"):
+                bindings_list = ast.literal_eval(list_str)
+            else:
+                bindings_list = []
+                
+            for item in bindings_list:
+                item_path = f"{custom_schema}:{path_prefix}{item}/"
+                res_name = subprocess.run(["gsettings", "get", item_path, "name"], stdout=subprocess.PIPE, text=True)
+                if "P-Translate" in res_name.stdout:
+                    # Found existing registration. Check command and binding
+                    res_cmd = subprocess.run(["gsettings", "get", item_path, "command"], stdout=subprocess.PIPE, text=True)
+                    res_bind = subprocess.run(["gsettings", "get", item_path, "binding"], stdout=subprocess.PIPE, text=True)
+                    
+                    registered_cmd = res_cmd.stdout.strip().strip("'\"")
+                    registered_bind_raw = res_bind.stdout.strip()
+                    try:
+                        registered_bind_list = ast.literal_eval(registered_bind_raw)
+                        registered_bind = registered_bind_list[0] if registered_bind_list else ""
+                    except Exception:
+                        registered_bind = ""
+                        
+                    if registered_cmd == expected_command and registered_bind == gsettings_key:
+                        shortcut_needs_update = False
+                    break
+        except Exception:
+            pass
+            
+    elif is_gnome:
+        # Check GNOME keybindings
+        schema = "org.gnome.settings-daemon.plugins.media-keys"
+        key = "custom-keybindings"
+        path_prefix = "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/"
+        custom_schema = "org.gnome.settings-daemon.plugins.media-keys.custom-keybinding"
+        
+        try:
+            res = subprocess.run(["gsettings", "get", schema, key], stdout=subprocess.PIPE, text=True, timeout=2)
+            list_str = res.stdout.strip()
+            if list_str and not list_str.startswith("@as"):
+                bindings_list = ast.literal_eval(list_str)
+            else:
+                bindings_list = []
+                
+            for item in bindings_list:
+                item_path = f"{custom_schema}:{item}"
+                res_name = subprocess.run(["gsettings", "get", item_path, "name"], stdout=subprocess.PIPE, text=True)
+                if "P-Translate" in res_name.stdout:
+                    res_cmd = subprocess.run(["gsettings", "get", item_path, "command"], stdout=subprocess.PIPE, text=True)
+                    res_bind = subprocess.run(["gsettings", "get", item_path, "binding"], stdout=subprocess.PIPE, text=True)
+                    
+                    registered_cmd = res_cmd.stdout.strip().strip("'\"")
+                    registered_bind = res_bind.stdout.strip().strip("'\"")
+                    
+                    if registered_cmd == expected_command and registered_bind == gsettings_key:
+                        shortcut_needs_update = False
+                    break
+        except Exception:
+            pass
+            
+    # Check autostart file correctness
+    autostart_needs_update = True
+    autostart_dir = os.path.expanduser("~/.config/autostart")
+    desktop_file_path = os.path.join(autostart_dir, "p-translate.desktop")
+    
+    if autostart:
+        if os.path.exists(desktop_file_path):
+            try:
+                with open(desktop_file_path, "r") as f:
+                    content = f.read()
+                expected_exec = f"Exec=/bin/bash {os.path.join(project_dir, 'run.sh')}"
+                if expected_exec in content:
+                    autostart_needs_update = False
+            except Exception:
+                pass
+    else:
+        # If autostart is disabled and no file exists, we don't need to update
+        if not os.path.exists(desktop_file_path):
+            autostart_needs_update = False
+
+    messages = []
+    # 4. Perform updates if needed
+    if shortcut_needs_update:
+        success, msg = apply_shortcut(shortcut)
+        if success:
+            messages.append("Global shortcut updated successfully")
+        else:
+            messages.append(f"Failed to update shortcut: {msg}")
+            
+    if autostart_needs_update:
+        success, msg = apply_autostart(autostart)
+        if success:
+            messages.append("Autostart configuration updated successfully")
+        else:
+            messages.append(f"Failed to update autostart: {msg}")
+            
+    if not messages:
+        return True, "Shortcut and autostart are already up to date"
+    else:
+        return True, "; ".join(messages)
+
