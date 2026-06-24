@@ -146,6 +146,12 @@ def apply_shortcut(qt_shortcut: str) -> tuple[bool, str]:
             formatted_list = str(bindings_list).replace("'", '"')
             subprocess.run(["gsettings", "set", schema, key, formatted_list])
             
+            # Automatically reload Cinnamon desktop environment to apply the new shortcut
+            try:
+                subprocess.run(["pkill", "-HUP", "-x", "cinnamon"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            except Exception:
+                pass
+            
             return True, f"Cinnamon Shortcut registered successfully to {qt_shortcut}!"
         except Exception as e:
             return False, f"Error configuring Cinnamon shortcut: {str(e)}"
