@@ -5,8 +5,11 @@ import shutil
 import ast
 import re
 
-# Path to the config file in the same directory as this script
-CONFIG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.json")
+# Path to the config file in user's config directory
+CONFIG_DIR = os.path.expanduser("~/.config/qtranslate-linux")
+os.makedirs(CONFIG_DIR, exist_ok=True)
+CONFIG_PATH = os.path.join(CONFIG_DIR, "config.json")
+
 
 def load_config() -> dict:
     """Loads configuration from config.json, creating a default one if it doesn't exist."""
