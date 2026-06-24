@@ -133,18 +133,18 @@ def apply_shortcut(qt_shortcut: str) -> tuple[bool, str]:
             else:
                 binding_id = f"custom{max_idx + 1}"
                 
-            # Add to custom-list if not present
-            if binding_id not in bindings_list:
-                bindings_list.append(binding_id)
-                formatted_list = str(bindings_list).replace("'", '"')
-                subprocess.run(["gsettings", "set", schema, key, formatted_list])
-                
-            # Set keybinding details
+            # Set keybinding details first
             target_path = f"{custom_schema}:{path_prefix}{binding_id}/"
             subprocess.run(["gsettings", "set", target_path, "name", "P-Translate"])
             subprocess.run(["gsettings", "set", target_path, "command", command_str])
             # Cinnamon binding must be formatted as a list of strings
             subprocess.run(["gsettings", "set", target_path, "binding", f"['{gsettings_key}']"])
+
+            # Add to custom-list and set it last to trigger Cinnamon reload
+            if binding_id not in bindings_list:
+                bindings_list.append(binding_id)
+            formatted_list = str(bindings_list).replace("'", '"')
+            subprocess.run(["gsettings", "set", schema, key, formatted_list])
             
             return True, f"Cinnamon Shortcut registered successfully to {qt_shortcut}!"
         except Exception as e:
@@ -188,18 +188,18 @@ def apply_shortcut(qt_shortcut: str) -> tuple[bool, str]:
             else:
                 new_path = f"{path_prefix}custom{max_idx + 1}/"
                 
-            # Add to custom-keybindings list if not present
-            if new_path not in bindings_list:
-                bindings_list.append(new_path)
-                formatted_list = str(bindings_list).replace("'", '"')
-                subprocess.run(["gsettings", "set", schema, key, formatted_list])
-                
-            # Set keybinding details
+            # Set keybinding details first
             target_path = f"{custom_schema}:{new_path}"
             subprocess.run(["gsettings", "set", target_path, "name", "P-Translate"])
             subprocess.run(["gsettings", "set", target_path, "command", command_str])
             # GNOME binding is a direct string
             subprocess.run(["gsettings", "set", target_path, "binding", gsettings_key])
+
+            # Add to custom-keybindings list and set it last to trigger GNOME reload
+            if new_path not in bindings_list:
+                bindings_list.append(new_path)
+            formatted_list = str(bindings_list).replace("'", '"')
+            subprocess.run(["gsettings", "set", schema, key, formatted_list])
             
             return True, f"GNOME Shortcut registered successfully to {qt_shortcut}!"
         except Exception as e:
